@@ -1,0 +1,30 @@
+{
+  "name": "tradeline",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Milestone-escrow freelance marketplace on Stellar Soroban",
+  "workspaces": [
+    "sdk",
+    "app",
+    "indexer",
+    "scripts"
+  ],
+  "scripts": {
+    "build:contracts":  "cargo build --target wasm32-unknown-unknown --release",
+    "test:contracts":   "cargo test",
+    "build:sdk":        "npm run build --workspace=sdk",
+    "dev:app":          "npm run dev --workspace=app",
+    "build:app":        "npm run build --workspace=app",
+    "dev:indexer":      "npm run dev --workspace=indexer",
+    "db:migrate":       "npm run db:migrate --workspace=indexer",
+    "deploy:win":       "powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1",
+    "deploy:unix":      "bash scripts/deploy.sh",
+    "seed":             "ts-node --project scripts/tsconfig.json scripts/seed_demo.ts"
+  },
+  "devDependencies": {
+    "ts-node":    "^10.9.2",
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.12",
+    "dotenv":     "^16.4.5"
+  }
+}

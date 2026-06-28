@@ -1,0 +1,17 @@
+{
+  "name": "tradeline-scripts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "seed": "ts-node --project tsconfig.json seed_demo.ts"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^12.3.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.12",
+    "ts-node": "^10.9.2"
+  }
+}

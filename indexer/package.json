@@ -1,0 +1,23 @@
+{
+  "name": "tradeline-indexer",
+  "version": "0.1.0",
+  "description": "Event indexer for Tradeline contracts → Postgres",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "db:migrate": "node dist/db/migrate.js"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^12.3.0",
+    "pg": "^8.11.5",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.12",
+    "@types/pg": "^8.11.5",
+    "ts-node": "^10.9.2"
+  }
+}
