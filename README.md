@@ -1,5 +1,11 @@
 # Tradeline
 
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE-APACHE)
+[![Built on Stellar](https://img.shields.io/badge/Built%20on-Stellar%20Soroban-7B2FBE?logo=stellar&logoColor=white)](https://stellar.org)
+[![Network](https://img.shields.io/badge/Network-Testnet-orange)](https://soroban-testnet.stellar.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tradeline-hov/Tradeline-hov/pulls)
+
 **Milestone-escrow freelance marketplace on Stellar Soroban.**
 
 > Upwork without the 20% cut and the frozen-funds anxiety.
