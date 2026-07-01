@@ -5,6 +5,7 @@
 [![Built on Stellar](https://img.shields.io/badge/Built%20on-Stellar%20Soroban-7B2FBE?logo=stellar&logoColor=white)](https://stellar.org)
 [![Network](https://img.shields.io/badge/Network-Testnet-orange)](https://soroban-testnet.stellar.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tradeline-hov/Tradeline-hov/pulls)
+[![CI](https://github.com/Tradeline-hov/Tradeline-hov/actions/workflows/ci.yml/badge.svg)](https://github.com/Tradeline-hov/Tradeline-hov/actions/workflows/ci.yml)
 
 **Milestone-escrow freelance marketplace on Stellar Soroban.**
 

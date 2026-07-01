@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Rust contracts ───────────────────────────────────────────────────────────
+  contracts:
+    name: Contracts — Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build contracts (release)
+        run: cargo build --target wasm32-unknown-unknown --release
+
+      - name: Run contract unit tests
+        run: cargo test --workspace
+
+  # ── TypeScript SDK ───────────────────────────────────────────────────────────
+  sdk:
+    name: SDK — Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Type check SDK
+        run: npx tsc --noEmit
+        working-directory: sdk
+
+  # ── Next.js app ──────────────────────────────────────────────────────────────
+  app:
+    name: App — Build & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Type check app
+        run: npx tsc --noEmit
+        working-directory: app
+
+      - name: Build Next.js app
+        run: npx next build
+        working-directory: app
+        env:
+          # Provide empty contract IDs so build succeeds without deployment
+          NEXT_PUBLIC_RPC_URL: https://soroban-testnet.stellar.org
+          NEXT_PUBLIC_ESCROW_CONTRACT_ID: ""
+          NEXT_PUBLIC_REPUTATION_CONTRACT_ID: ""
+          NEXT_PUBLIC_ARBITER_REGISTRY_ID: ""
+          NEXT_PUBLIC_USDC_CONTRACT: CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU
+
+  # ── Indexer ──────────────────────────────────────────────────────────────────
+  indexer:
+    name: Indexer — Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Type check indexer
+        run: npx tsc --noEmit
+        working-directory: indexer
