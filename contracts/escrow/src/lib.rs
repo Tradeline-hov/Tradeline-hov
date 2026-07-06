@@ -50,7 +50,7 @@ pub enum DataKey {
 // ─── Errors ───────────────────────────────────────────────────────────────────
 
 #[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Copy)]
 pub enum EscrowError {
     JobNotFound       = 1,
     MilestoneNotFound = 2,

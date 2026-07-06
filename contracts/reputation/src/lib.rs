@@ -111,7 +111,7 @@ impl ReputationContract {
             .set(&DataKey::Summary(ratee.clone()), &summary);
 
         env.events()
-            .publish((symbol_short!("rating_rec"),), (ratee, stars_clamped, job_id, milestone_id));
+            .publish((symbol_short!("rating_rc"),), (ratee, stars_clamped, job_id, milestone_id));
     }
 
     // ── Views ─────────────────────────────────────────────────────────────────
