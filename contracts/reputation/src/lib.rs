@@ -10,7 +10,7 @@
 
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, Vec};
 
 // ─── Data types ──────────────────────────────────────────────────────────────
 
@@ -111,7 +111,7 @@ impl ReputationContract {
             .set(&DataKey::Summary(ratee.clone()), &summary);
 
         env.events()
-            .publish((b"rating_recorded",), (ratee, stars_clamped, job_id, milestone_id));
+            .publish((symbol_short!("rating_rec"),), (ratee, stars_clamped, job_id, milestone_id));
     }
 
     // ── Views ─────────────────────────────────────────────────────────────────

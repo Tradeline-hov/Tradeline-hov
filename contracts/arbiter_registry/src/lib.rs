@@ -6,7 +6,7 @@
 
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, contracttype, token, Address, Env, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, token, Address, Env, Vec};
 
 // ─── Data types ──────────────────────────────────────────────────────────────
 
@@ -79,7 +79,7 @@ impl ArbiterRegistryContract {
             env.storage().persistent().set(&DataKey::ArbiterList, &list);
         }
 
-        env.events().publish((b"arbiter_registered",), (arbiter, stake_amount));
+        env.events().publish((symbol_short!("arb_reg"),), (arbiter, stake_amount));
     }
 
     /// Admin approves a registered arbiter.
@@ -96,7 +96,7 @@ impl ArbiterRegistryContract {
         info.approved = true;
         env.storage().persistent().set(&DataKey::Arbiter(arbiter.clone()), &info);
 
-        env.events().publish((b"arbiter_approved",), arbiter);
+        env.events().publish((symbol_short!("arb_appr"),), arbiter);
     }
 
     /// Admin revokes an arbiter (e.g., misbehaviour).
@@ -113,7 +113,7 @@ impl ArbiterRegistryContract {
         info.approved = false;
         env.storage().persistent().set(&DataKey::Arbiter(arbiter.clone()), &info);
 
-        env.events().publish((b"arbiter_revoked",), arbiter);
+        env.events().publish((symbol_short!("arb_rev"),), arbiter);
     }
 
     /// Increment dispute counter after resolution (called by escrow).
