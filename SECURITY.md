@@ -2,86 +2,112 @@
 
 ## Supported Versions
 
-| Version | Supported |
-|---------|-----------|
-| `main`  | ✅ Yes    |
-| older   | ❌ No     |
+| Version | Supported          |
+|---------|--------------------|
+| `main`  | ✅ Active          |
+| < 0.1.0 | ❌ Not supported   |
 
-Tradeline Protocol is currently in **testnet / pre-production**. Do not use with real funds.
+> **Testnet only.** Tradeline Protocol is pre-production software. Do not use with real funds on Stellar mainnet.
 
 ---
 
 ## Reporting a Vulnerability
 
-**Please do not open a public GitHub issue for security vulnerabilities.**
+**Do not open a public GitHub issue for security vulnerabilities.**
 
-If you discover a vulnerability in the smart contracts, SDK, or frontend, report it privately:
+Report privately via one of these channels:
 
-1. Open a **GitHub Security Advisory** at:
-   `https://github.com/Tradeline-hov/Tradeline-hov/security/advisories/new`
+1. **GitHub Security Advisory** (preferred):
+   [Create a private advisory →](https://github.com/Tradeline-hov/Tradeline-hov/security/advisories/new)
 
-2. Include:
+2. Include in your report:
    - A clear description of the vulnerability
-   - Steps to reproduce it
-   - The potential impact (e.g. fund loss, auth bypass, data leak)
-   - Any suggested fix if you have one
+   - Exact steps to reproduce it
+   - The potential impact (e.g. fund drain, auth bypass, data exposure)
+   - Affected component (`escrow`, `reputation`, `arbiter_registry`, SDK, app, indexer)
+   - Your suggested fix if you have one
 
-We will acknowledge your report within **48 hours** and aim to release a fix within **7 days**
-for critical issues.
+**Response SLA:**
+
+| Severity | Acknowledgement | Fix target |
+|----------|----------------|------------|
+| Critical | 24 hours | 3 days |
+| High | 48 hours | 7 days |
+| Medium | 72 hours | 14 days |
+| Low | 7 days | Next release |
 
 ---
 
 ## Scope
 
-The following are **in scope** for security reports:
+### In scope
 
 | Area | Examples |
 |------|---------|
-| Smart contracts | Reentrancy, auth bypass, fund drain, integer overflow |
-| SDK | Unsafe transaction construction, key exposure |
-| Frontend | XSS, secret key leakage, wallet auth bypass |
-| Indexer | SQL injection, unauthorized data access |
+| Smart contracts | Reentrancy, auth bypass, fund drain, integer overflow/underflow |
+| SDK | Unsafe transaction construction, secret key exposure |
+| Frontend | XSS, wallet auth bypass, secret key leakage via logs or storage |
+| Indexer | SQL injection, unauthorised data access |
 
-The following are **out of scope**:
+### Out of scope
 
-- Issues in third-party dependencies (report to them directly)
+- Vulnerabilities in third-party dependencies — report to them directly
 - Theoretical attacks with no practical exploit path
-- Issues only affecting outdated browsers
+- Issues only affecting outdated or unsupported browsers
+- Social engineering or phishing attacks targeting users
 
 ---
 
-## Known Security Considerations
+## Security Architecture
 
 ### Smart Contracts
 
-- **Reentrancy** — All fund-moving functions use a boolean guard in instance storage.
-- **Checks-Effects-Interactions** — State is mutated before any `token.transfer()` or cross-contract call.
-- **Explicit auth** — Every privileged function calls `require_auth()` on the verified party.
-- **Reputation writes** — Only the registered escrow contract address can call `record_rating`.
-- **Split arithmetic** — Basis points (u32) with i128 stroops — no floats, no rounding exploits.
+| Pattern | Implementation |
+|---------|---------------|
+| **Reentrancy guard** | Boolean lock in instance storage; set before any external call, cleared after |
+| **Checks-Effects-Interactions** | All storage writes happen before `token.transfer()` or cross-contract calls |
+| **Explicit auth** | `require_auth()` called on the verified party before every state mutation |
+| **Single writer** | Only the registered escrow contract address can call `record_rating` on the reputation contract |
+| **Integer arithmetic** | Basis points (u32) + i128 stroops — no floating point, no rounding exploits |
+| **Clamped inputs** | Stars clamped to 1–5 on-chain; split bps validated ≤ 10 000 |
 
 ### Frontend
 
-- **Testnet only** — The demo wallet stores the connected address in React state.
-  **Never use a mainnet secret key in the browser.**
-- For production, integrate [Freighter](https://www.freighter.app/) or [Albedo](https://albedo.link/).
+- **Testnet demo mode** — the wallet context stores the connected address in React state. This is intentional for demo purposes only.
+- **Mainnet guidance** — for production use, integrate [Freighter](https://www.freighter.app/) or [Albedo](https://albedo.link/). Never expose a secret key in the browser.
+- **Environment variables** — `NEXT_PUBLIC_*` vars are exposed to the browser by design (contract IDs only, no secrets). Private keys must never be placed in `.env.local`.
 
-### Environment Variables
+### Environment & Secrets
 
-- `.env.local` and `.env` are in `.gitignore` — never commit them.
-- `NEXT_PUBLIC_*` variables are exposed to the browser — never put secrets in them.
+- `.env.local` and `.env` are in `.gitignore` — never commit them
+- `NEXT_PUBLIC_*` variables contain only public contract addresses
+- Secrets (deployer keys, admin keys) must be stored in GitHub Actions Secrets for CI/CD use only
+
+---
+
+## Known Limitations (Pre-Production)
+
+1. **No mainnet deployment** — contracts have not been audited for mainnet use
+2. **No formal audit** — a professional smart contract security audit has not yet been conducted
+3. **Demo wallet** — the browser wallet is for testnet demos only; it does not use hardware signing or a proper wallet extension
 
 ---
 
 ## Disclosure Policy
 
-We follow **responsible disclosure**. Once a fix is deployed, we will:
+We follow **coordinated responsible disclosure**:
 
-1. Credit the reporter in the release notes (unless they prefer anonymity)
-2. Publish a post-mortem if the issue affected any live users
+1. Reporter submits vulnerability privately
+2. Maintainers acknowledge and begin investigation
+3. Fix is developed and tested
+4. Fix is deployed to all affected environments
+5. Reporter is credited in the release notes (unless they prefer anonymity)
+6. A post-mortem is published for critical issues
 
 ---
 
-## License
+## Hall of Fame
 
-This security policy applies to all code in this repository under the MIT and Apache-2.0 licenses.
+Security researchers who responsibly disclose valid vulnerabilities will be credited here.
+
+*None yet — be the first.*
