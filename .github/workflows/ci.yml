@@ -8,108 +8,93 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  NODE_VERSION: "20"
 
 jobs:
-  # ── 1. Rust contracts: build + test ─────────────────────────────────────────
+  # ── 1. Rust contracts ────────────────────────────────────────────────────────
   contracts:
     name: "Contracts — Build & Test"
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install Rust stable + wasm32 target
+      - name: Install Rust stable + wasm32
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Cache Rust build artifacts
+      - name: Cache Rust
         uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: ". -> target"
 
-      - name: Build contracts (wasm release)
+      - name: Build (wasm release)
         run: cargo build --target wasm32-unknown-unknown --release
 
-      - name: Run contract unit tests (native)
+      - name: Unit tests (native)
         run: cargo test --workspace -- --test-output immediate
 
-  # ── 2. SDK type check ────────────────────────────────────────────────────────
+  # ── 2. SDK ───────────────────────────────────────────────────────────────────
   sdk:
     name: "SDK — Type Check"
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          node-version: "22"
 
-      - name: Install root workspace dependencies
-        run: npm ci --ignore-scripts
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+        working-directory: sdk
 
-      - name: Type check SDK
+      - name: Type check
         run: npx tsc --noEmit
         working-directory: sdk
 
-  # ── 3. Next.js app: type check + build ──────────────────────────────────────
+  # ── 3. App ───────────────────────────────────────────────────────────────────
   app:
     name: "App — Type Check & Build"
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          node-version: "22"
 
-      - name: Install root workspace dependencies
-        run: npm ci --ignore-scripts
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+        working-directory: app
 
-      - name: Type check app
+      - name: Type check
         run: npx tsc --noEmit
         working-directory: app
 
-      - name: Build Next.js app
+      - name: Build
         run: npx next build
         working-directory: app
         env:
+          NEXT_TELEMETRY_DISABLED: "1"
           NEXT_PUBLIC_RPC_URL: "https://soroban-testnet.stellar.org"
           NEXT_PUBLIC_ESCROW_CONTRACT_ID: ""
           NEXT_PUBLIC_REPUTATION_CONTRACT_ID: ""
           NEXT_PUBLIC_ARBITER_REGISTRY_ID: ""
           NEXT_PUBLIC_USDC_CONTRACT: "CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU"
-          # Disable Next.js telemetry in CI
-          NEXT_TELEMETRY_DISABLED: "1"
 
-  # ── 4. Indexer type check ────────────────────────────────────────────────────
+  # ── 4. Indexer ───────────────────────────────────────────────────────────────
   indexer:
     name: "Indexer — Type Check"
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          node-version: "22"
 
-      - name: Install root workspace dependencies
-        run: npm ci --ignore-scripts
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+        working-directory: indexer
 
-      - name: Type check indexer
+      - name: Type check
         run: npx tsc --noEmit
         working-directory: indexer
