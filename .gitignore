@@ -1,6 +1,6 @@
 # Rust
 target/
-Cargo.lock
+# Note: Cargo.lock IS committed for reproducible CI builds
 
 # Node
 node_modules/

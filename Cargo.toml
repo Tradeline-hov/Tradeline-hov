@@ -6,6 +6,10 @@ members = [
     "contracts/arbiter_registry",
 ]
 
+# Pin soroban-sdk uniformly across all workspace members
+[workspace.dependencies]
+soroban-sdk = { version = "21.7.6", features = ["alloc"] }
+
 [profile.release]
 opt-level = "z"
 overflow-checks = true
