@@ -1,0 +1,13 @@
+# Funding configuration
+# GitHub will show a "Sponsor" button using these links.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+# GitHub Sponsors (add your GitHub username if enrolled)
+# github: [your-github-username]
+
+# Open Collective
+# open_collective: tradeline-protocol
+
+# Custom sponsorship links
+custom:
+  - "https://github.com/Tradeline-hov/Tradeline-hov"

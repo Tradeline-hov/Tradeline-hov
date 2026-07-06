@@ -1,0 +1,18 @@
+# Issue template chooser configuration
+# Controls what users see when they click "New Issue"
+# https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository
+
+blank_issues_enabled: false
+
+contact_links:
+  - name: 💬 Ask a question
+    url: https://github.com/Tradeline-hov/Tradeline-hov/discussions
+    about: Use Discussions for general questions — keep Issues for bugs and feature requests.
+
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/Tradeline-hov/Tradeline-hov/security/advisories/new
+    about: Please report security vulnerabilities privately, not as public issues.
+
+  - name: 🌐 Stellar Developer Docs
+    url: https://developers.stellar.org
+    about: Official Stellar and Soroban documentation.

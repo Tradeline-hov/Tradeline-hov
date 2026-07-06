@@ -1,0 +1,19 @@
+# CODEOWNERS
+# Defines who is automatically requested for review when a PR touches certain paths.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything
+* @Tradeline-hov
+
+# Smart contracts — require contract owner review on any change
+/contracts/ @Tradeline-hov
+
+# CI / GitHub Actions — require review on workflow changes
+/.github/workflows/ @Tradeline-hov
+
+# Security policy — require review on any security doc change
+SECURITY.md @Tradeline-hov
+
+# License files
+LICENSE @Tradeline-hov
+LICENSE-APACHE @Tradeline-hov
