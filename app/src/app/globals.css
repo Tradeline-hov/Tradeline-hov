@@ -1,5 +1,4 @@
-/* Move @import before @tailwind directives to avoid CSS warnings */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* No @import here — font loaded via <link> in layout.tsx to avoid CI fetch failures */
 
 @tailwind base;
 @tailwind components;

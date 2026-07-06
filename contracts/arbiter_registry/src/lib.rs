@@ -158,7 +158,7 @@ mod tests {
     use super::*;
     use soroban_sdk::{
         testutils::Address as _,
-        token::{Client as TokenClient, StellarAssetClient},
+        token::StellarAssetClient,
         Address, Env,
     };
 
@@ -171,8 +171,7 @@ mod tests {
         let arbiter = Address::generate(&env);
 
         let token_admin = Address::generate(&env);
-        let token_id    = env.register_stellar_asset_contract_v2(token_admin.clone());
-        let token_addr  = token_id.address();
+        let token_addr  = env.register_stellar_asset_contract_v2(token_admin.clone()).address();
 
         // Mint tokens to arbiter
         let sac = StellarAssetClient::new(&env, &token_addr);

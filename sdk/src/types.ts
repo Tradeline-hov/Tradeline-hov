@@ -30,7 +30,7 @@ export interface Job {
   arbiter:    string;
   token:      string;
   milestones: Milestone[];
-  /** Next milestone index to be assigned */
+  /** Next milestone index — returned by the contract as part of the Job struct */
   next_id:    number;
 }
 

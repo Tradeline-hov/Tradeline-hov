@@ -26,13 +26,13 @@ export interface Milestone {
 // ── Job ───────────────────────────────────────────────────────────────────────
 
 export interface Job {
-  /** On-chain job ID (u64) */
+  /**
+   * On-chain job ID — the storage key, not part of the contract struct.
+   * Added here for convenience in UI state management.
+   */
   id:         bigint;
-  /** Stellar address of the client who created the job */
   client:     string;
-  /** Stellar address of the assigned arbiter */
   arbiter:    string;
-  /** Contract address of the payment token (USDC) */
   token:      string;
   milestones: Milestone[];
 }

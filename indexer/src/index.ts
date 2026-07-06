@@ -11,13 +11,15 @@
  */
 
 import 'dotenv/config';
-import { SorobanRpc, scValToNative, xdr } from '@stellar/stellar-sdk';
-import { getPool, runMigration } from './db/client';
+import { rpc as SorobanRpc, xdr, scValToNative } from '@stellar/stellar-sdk';
+import { getPool, runMigration }                  from './db/client';
 
-const RPC_URL         = process.env.RPC_URL         ?? 'https://soroban-testnet.stellar.org';
-const ESCROW_ID       = process.env.ESCROW_CONTRACT_ID       ?? '';
-const REPUTATION_ID   = process.env.REPUTATION_CONTRACT_ID   ?? '';
-const POLL_INTERVAL   = parseInt(process.env.POLL_INTERVAL_MS ?? '5000');
+// ── Config ────────────────────────────────────────────────────────────────────
+
+const RPC_URL       = process.env.RPC_URL                ?? 'https://soroban-testnet.stellar.org';
+const ESCROW_ID     = process.env.ESCROW_CONTRACT_ID     ?? '';
+const REPUTATION_ID = process.env.REPUTATION_CONTRACT_ID ?? '';
+const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL_MS ?? '5000', 10);
 
 const server = new SorobanRpc.Server(RPC_URL, { allowHttp: false });
 const db     = getPool();
@@ -33,15 +35,15 @@ async function getCursor(): Promise<number> {
 
 async function setCursor(ledger: number): Promise<void> {
   await db.query(
-    "INSERT INTO cursor(key, value) VALUES ('ledger', $1) ON CONFLICT (key) DO UPDATE SET value = $1",
+    "INSERT INTO cursor(key,value) VALUES('ledger',$1) ON CONFLICT(key) DO UPDATE SET value=$1",
     [ledger.toString()],
   );
 }
 
-// ── Event parsing ─────────────────────────────────────────────────────────────
+// ── ScVal decode helpers ──────────────────────────────────────────────────────
 
 function decodeTopics(topics: xdr.ScVal[]): string[] {
-  return topics.map((t) => {
+  return topics.map(t => {
     try { return String(scValToNative(t)); }
     catch { return t.toXDR('base64'); }
   });
@@ -58,9 +60,8 @@ async function handleJobCreated(data: unknown): Promise<void> {
   if (!Array.isArray(data)) return;
   const [jobId, client, arbiter, token] = data as [bigint, string, string, string];
   await db.query(
-    `INSERT INTO jobs(id, client, arbiter, token)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (id) DO NOTHING`,
+    `INSERT INTO jobs(id,client,arbiter,token)
+     VALUES($1,$2,$3,$4) ON CONFLICT(id) DO NOTHING`,
     [Number(jobId), client, arbiter, token],
   );
   console.log(`  ↳ job_created  job=${jobId}`);
@@ -70,10 +71,9 @@ async function handleMilestoneFunded(data: unknown): Promise<void> {
   if (!Array.isArray(data)) return;
   const [jobId, milestoneId, freelancer, amount] = data as [bigint, number, string, bigint];
   await db.query(
-    `INSERT INTO milestones(job_id, milestone_index, freelancer, amount, status, funded_at)
-     VALUES ($1, $2, $3, $4, 'Funded', now())
-     ON CONFLICT (job_id, milestone_index) DO NOTHING`,
-    [Number(jobId), milestoneId, freelancer, (Number(amount) / 1e7).toString()],
+    `INSERT INTO milestones(job_id,milestone_index,freelancer,amount,status,funded_at)
+     VALUES($1,$2,$3,$4,'Funded',now()) ON CONFLICT(job_id,milestone_index) DO NOTHING`,
+    [Number(jobId), milestoneId, freelancer, (Number(amount) / 1e7).toFixed(7)],
   );
   console.log(`  ↳ milestone_funded  job=${jobId} ms=${milestoneId}`);
 }
@@ -82,7 +82,7 @@ async function handleMilestoneSubmitted(data: unknown): Promise<void> {
   if (!Array.isArray(data)) return;
   const [jobId, milestoneId] = data as [bigint, number];
   await db.query(
-    `UPDATE milestones SET status='Submitted', submitted_at=now()
+    `UPDATE milestones SET status='Submitted',submitted_at=now()
      WHERE job_id=$1 AND milestone_index=$2`,
     [Number(jobId), milestoneId],
   );
@@ -91,9 +91,9 @@ async function handleMilestoneSubmitted(data: unknown): Promise<void> {
 
 async function handleMilestoneApproved(data: unknown): Promise<void> {
   if (!Array.isArray(data)) return;
-  const [jobId, milestoneId] = data as [bigint, number, string, bigint];
+  const [jobId, milestoneId] = data as [bigint, number];
   await db.query(
-    `UPDATE milestones SET status='Approved', approved_at=now()
+    `UPDATE milestones SET status='Approved',approved_at=now()
      WHERE job_id=$1 AND milestone_index=$2`,
     [Number(jobId), milestoneId],
   );
@@ -104,7 +104,7 @@ async function handleMilestoneDisputed(data: unknown): Promise<void> {
   if (!Array.isArray(data)) return;
   const [jobId, milestoneId] = data as [bigint, number];
   await db.query(
-    `UPDATE milestones SET status='Disputed', disputed_at=now()
+    `UPDATE milestones SET status='Disputed',disputed_at=now()
      WHERE job_id=$1 AND milestone_index=$2`,
     [Number(jobId), milestoneId],
   );
@@ -113,10 +113,9 @@ async function handleMilestoneDisputed(data: unknown): Promise<void> {
 
 async function handleDisputeResolved(data: unknown): Promise<void> {
   if (!Array.isArray(data)) return;
-  const [jobId, milestoneId, bps] = data as [bigint, number, number, bigint, bigint];
+  const [jobId, milestoneId, bps] = data as [bigint, number, number];
   await db.query(
-    `UPDATE milestones
-     SET status='Resolved', resolved_at=now(), freelancer_bps=$3
+    `UPDATE milestones SET status='Resolved',resolved_at=now(),freelancer_bps=$3
      WHERE job_id=$1 AND milestone_index=$2`,
     [Number(jobId), milestoneId, bps],
   );
@@ -127,38 +126,39 @@ async function handleRatingRecorded(data: unknown): Promise<void> {
   if (!Array.isArray(data)) return;
   const [ratee, stars, jobId, milestoneId] = data as [string, number, bigint, number];
 
-  // We don't have the rater in this event — use a placeholder
   await db.query(
-    `INSERT INTO reputation(ratee, rater, stars, job_id, milestone_id)
-     VALUES ($1, 'system', $2, $3, $4)`,
+    `INSERT INTO reputation(ratee,rater,stars,job_id,milestone_id)
+     VALUES($1,'system',$2,$3,$4)`,
     [ratee, stars, Number(jobId), milestoneId],
   );
 
-  // Upsert summary
   await db.query(
-    `INSERT INTO rep_summary(address, total_ratings, total_stars, average_x100)
-     VALUES ($1, 1, $2, $2 * 100)
-     ON CONFLICT (address) DO UPDATE
+    `INSERT INTO rep_summary(address,total_ratings,total_stars,average_x100)
+     VALUES($1,1,$2,$2*100)
+     ON CONFLICT(address) DO UPDATE
        SET total_ratings = rep_summary.total_ratings + 1,
            total_stars   = rep_summary.total_stars + $2,
-           average_x100  = (rep_summary.total_stars + $2) * 100 / (rep_summary.total_ratings + 1),
+           average_x100  = (rep_summary.total_stars + $2) * 100
+                           / (rep_summary.total_ratings + 1),
            updated_at    = now()`,
     [ratee, stars],
   );
   console.log(`  ↳ rating_recorded  ratee=${ratee} stars=${stars}`);
 }
 
-// ── Main polling loop ─────────────────────────────────────────────────────────
+// ── Handler dispatch table ────────────────────────────────────────────────────
 
-const EVENT_HANDLERS: Record<string, (data: unknown) => Promise<void>> = {
-  job_created:          handleJobCreated,
-  milestone_funded:     handleMilestoneFunded,
-  milestone_submitted:  handleMilestoneSubmitted,
-  milestone_approved:   handleMilestoneApproved,
-  milestone_disputed:   handleMilestoneDisputed,
-  dispute_resolved:     handleDisputeResolved,
-  rating_recorded:      handleRatingRecorded,
+const HANDLERS: Record<string, (data: unknown) => Promise<void>> = {
+  job_created:         handleJobCreated,
+  milestone_funded:    handleMilestoneFunded,
+  milestone_submitted: handleMilestoneSubmitted,
+  milestone_approved:  handleMilestoneApproved,
+  milestone_disputed:  handleMilestoneDisputed,
+  dispute_resolved:    handleDisputeResolved,
+  rating_recorded:     handleRatingRecorded,
 };
+
+// ── Polling loop ──────────────────────────────────────────────────────────────
 
 async function poll(): Promise<void> {
   const fromLedger = await getCursor();
@@ -176,24 +176,22 @@ async function poll(): Promise<void> {
 
     for (const event of events.events) {
       const topics  = decodeTopics(event.topic);
-      const topicKey = topics[0]?.replace(/['"]/g, '');
-      const data     = decodeData(event.value);
+      const key     = topics[0]?.replace(/['"]/g, '') ?? '';
+      const data    = decodeData(event.value);
 
-      console.log(`[ledger ${event.ledger}] ${topicKey}`);
+      console.log(`[ledger ${event.ledger}] ${key}`);
 
-      const handler = EVENT_HANDLERS[topicKey ?? ''];
+      const handler = HANDLERS[key];
       if (handler) {
-        await handler(data).catch((err) =>
-          console.error(`  Error handling ${topicKey}:`, err),
+        await handler(data).catch(err =>
+          console.error(`  Error handling ${key}:`, err),
         );
       }
 
       if (event.ledger > maxLedger) maxLedger = event.ledger;
     }
 
-    if (maxLedger > fromLedger) {
-      await setCursor(maxLedger + 1);
-    }
+    if (maxLedger > fromLedger) await setCursor(maxLedger + 1);
   } catch (err) {
     console.error('Poll error:', err);
   }
@@ -202,16 +200,15 @@ async function poll(): Promise<void> {
 async function main(): Promise<void> {
   console.log('Tradeline Indexer starting…');
   await runMigration();
-  console.log(`Watching contracts:\n  escrow:     ${ESCROW_ID}\n  reputation: ${REPUTATION_ID}`);
+  console.log(`Watching:\n  escrow:     ${ESCROW_ID}\n  reputation: ${REPUTATION_ID}`);
 
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  for (;;) {
     await poll();
-    await new Promise((r) => setTimeout(r, POLL_INTERVAL));
+    await new Promise(r => setTimeout(r, POLL_INTERVAL));
   }
 }
 
-main().catch((err) => {
+main().catch(err => {
   console.error('Fatal:', err);
   process.exit(1);
 });

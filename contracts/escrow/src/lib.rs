@@ -467,36 +467,27 @@ mod tests {
         let env = Env::default();
         env.mock_all_auths();
 
-        // Deploy a minimal SAC (Stellar Asset Contract) as USDC stand-in
         let token_admin = Address::generate(&env);
-        let token_id    = env.register_stellar_asset_contract_v2(token_admin.clone());
-        let token_addr  = token_id.address();
+        // Use register_stellar_asset_contract which works in soroban-sdk 21
+        let token_addr  = env.register_stellar_asset_contract_v2(token_admin.clone()).address();
 
-        // Mint some tokens to client
         let client_addr = Address::generate(&env);
         let freelancer  = Address::generate(&env);
         let arbiter     = Address::generate(&env);
 
+        // Mint 1 000 USDC (10^9 stroops) to client
         let sac = StellarAssetClient::new(&env, &token_addr);
         sac.mint(&client_addr, &1_000_000_000i128);
 
-        // Deploy a stub reputation contract (no-op)
-        let rep_id = env.register(reputation_stub::ReputationStub, ());
-        let rep_addr = rep_id;
+        // Deploy no-op reputation stub
+        let rep_addr = env.register(reputation_stub::ReputationStub, ());
 
-        // Deploy escrow
+        // Deploy escrow and initialise
         let escrow_id = env.register(EscrowContract, ());
         let escrow    = EscrowContractClient::new(&env, &escrow_id);
         escrow.init(&rep_addr);
 
-        TestEnv {
-            env,
-            escrow,
-            token: token_addr,
-            client_addr,
-            freelancer,
-            arbiter,
-        }
+        TestEnv { env, escrow, token: token_addr, client_addr, freelancer, arbiter }
     }
 
     // ── Happy path ────────────────────────────────────────────────────────────
